@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Анти ИИ Метроном</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <style>
+        /* === БАЗОВЫЕ СТИЛИ === */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: #000;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+            transition: background 0.3s ease;
+        }
+
+        body.light-theme {
+            background: #f5f5f5;
+        }
+
+        .screen {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            max-width: 450px;
+            max-height: 800px;
+            aspect-ratio: 9 / 16;
+            background: #000;
+            overflow: hidden;
+            margin: auto;
+            transition: background 0.3s ease;
+        }
+
+        body.light-theme .screen {
+            background: #f5f5f5;
+        }
+
+        .page {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            background: #000;
+            overflow-y: auto;
+            transition: background 0.3s ease;
+        }
+
+        body.light-theme .page {
+            background: #f5f5f5;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .logo-bar {
+            position: absolute;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            padding: 6px 16px;
+            border-radius: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            pointer-events: none;
+            transition: background 0.3s ease;
+        }
+        body.light-theme .logo-bar {
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        .logo-icon {
+            width: 22px;
+            height: 22px;
+            background-image: url('favicon.ico');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+        .logo-text { font-weight: 700; font-size: 14px; color: #fff; letter-spacing: 0.5px; }
+        body.light-theme .logo-text { color: #000; }
+
+        .back-btn {
+            position: sticky;
+            top: 16px;
+            left: 16px;
+            z-index: 60;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(4px);
+            border: none;
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 16px 0 0 16px;
+            transition: 0.1s, background 0.3s;
+        }
+        body.light-theme .back-btn {
+            background: rgba(0, 0, 0, 0.15);
+            color: #000;
+        }
+        .back-btn:active { transform: scale(0.95); }
+
+        /* СТРАНИЦА 1: ЗАСТАВКА */
+        .layers {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .layers img, .layers video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        
+        .sound-btn {
+            position: absolute;
+            top: 18px;
+            left: 18px;
+            z-index: 30;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(12px);
+            border-radius: 60px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            padding: 12px 26px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: bold;
+            font-size: 1.4rem;
+            color: white;
+            transition: 0.1s ease;
+            font-family: system-ui;
+        }
+        .sound-btn:active { transform: scale(0.96); }
+        .sound-btn .ico { font-size: 1.9rem; }
+        .sound-btn .txt { font-size: 1.25rem; }
+        @media (max-width: 480px) {
+            .sound-btn { padding: 8px 20px; }
+            .sound-btn .ico { font-size: 1.6rem; }
+            .sound-btn .txt { font-size: 1.1rem; }
+        }
+
+        /* СТРАНИЦА 2: ПРОЕКТЫ + ПОДДЕРЖКА */
+        .proj-list {
+            padding: 20px 16px 30px;
+            height: 100%;
+            overflow-y: auto;
+        }
+        
+        .support-block {
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f0f1a 100%);
+            border-radius: 24px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(39, 174, 96, 0.3);
+            transition: background 0.3s ease;
+        }
+        body.light-theme .support-block {
+            background: linear-gradient(135deg, #e0e0e0 0%, #ffffff 100%);
+            border: 1px solid #27ae60;
+        }
+        .support-block h3 {
+            color: #f1c40f;
+            font-size: 1.3rem;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        body.light-theme .support-block h3 { color: #e67e22; }
+        .free-badge {
+            text-align: center;
+            color: #27ae60;
+            font-weight: bold;
+            margin-bottom: 12px;
+            font-size: 1rem;
+        }
+        .support-text {
+            color: #ccc;
+            font-size: 0.9rem;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        body.light-theme .support-text { color: #555; }
+        .phone-row {
+            background: #0a0a0a;
+            padding: 14px;
+            border-radius: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 15px 0;
+            border: 1px solid #27ae60;
+        }
+        body.light-theme .phone-row { background: #f0f0f0; }
+        .phone-row span {
+            font-size: 1.1rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+            color: #27ae60;
+        }
+        .copy-phone-btn {
+            background: #27ae60;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 40px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .copy-phone-btn:active { transform: scale(0.95); }
+        .support-note {
+            font-size: 0.75rem;
+            color: #888;
+            text-align: center;
+            margin-top: 12px;
+        }
+        body.light-theme .support-note { color: #666; }
+        .support-thanks {
+            text-align: center;
+            color: #27ae60;
+            margin-top: 12px;
+            font-weight: bold;
+        }
+        
+        .other-projects-title {
+            color: #fff;
+            font-size: 1.2rem;
+            margin: 20px 0 15px 0;
+            border-left: 4px solid #27ae60;
+            padding-left: 12px;
+        }
+        body.light-theme .other-projects-title { color: #000; }
+        
+        .proj-item {
+            padding: 14px;
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 14px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            color: #fff;
+            font-weight: 600;
+            transition: 0.1s;
+        }
+        body.light-theme .proj-item {
+            background: #fff;
+            border: 1px solid #ddd;
+            color: #000;
+        }
+        .proj-item:active {
+            background: #27ae60;
+            border-color: #27ae60;
+            color: #000;
+            transform: scale(0.98);
+        }
+        .btn-metronom {
+            width: 100%;
+            padding: 14px;
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 40px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+        .btn-metronom:active { transform: scale(0.97); }
+
+        /* СТРАНИЦА 3: МЕТРОНОМ */
+        :root {
+            --primary: #27ae60;
+            --primary-dark: #1e8e50;
+            --gold: #f1c40f;
+            --error: #e74c3c;
+        }
+        
+        .app {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-y: auto;
+            opacity: 0;
+            transition: opacity 0.5s ease, background 0.3s ease;
+        }
+        body:not(.light-theme) .app {
+            background: #121212;
+        }
+        body.light-theme .app {
+            background: #f5f5f5;
+        }
+        .app.visible { opacity: 1; }
+        
+        .header {
+            width: 100%;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            transition: background 0.3s ease;
+        }
+        body:not(.light-theme) .header { background: #1e1e1e; }
+        body.light-theme .header { background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        
+        .header-title {
+            font-weight: bold;
+            font-size: 1rem;
+        }
+        body:not(.light-theme) .header-title { color: #e0e0e0; }
+        body.light-theme .header-title { color: #000; }
+        
+        .lang-switch {
+            cursor: pointer;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            transition: 0.1s;
+            background: #2a2a2a;
+            color: #27ae60;
+            border: 1px solid #27ae60;
+        }
+        body.light-theme .lang-switch {
+            background: #e0e0e0;
+            color: #1e8e50;
+            border: 1px solid #27ae60;
+        }
+        .lang-switch:active { transform: scale(0.95); }
+        
+        .theme-switch {
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            transition: 0.1s;
+            background: #2a2a2a;
+            color: #f1c40f;
+            border: 1px solid #f1c40f;
+            margin-right: 8px;
+        }
+        body.light-theme .theme-switch {
+            background: #e0e0e0;
+            color: #e67e22;
+            border: 1px solid #e67e22;
+        }
+        .theme-switch:active { transform: scale(0.95); }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            padding: 20px;
+            width: 100%;
+            max-width: 400px;
+        }
+        .stat-card {
+            padding: 15px;
+            border-radius: 16px;
+            text-align: center;
+            border-bottom: 4px solid var(--primary);
+            transition: background 0.3s ease;
+        }
+        body:not(.light-theme) .stat-card { background: #1e1e1e; }
+        body.light-theme .stat-card { background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        
+        .stat-label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; }
+        body:not(.light-theme) .stat-label { color: #888; }
+        body.light-theme .stat-label { color: #666; }
+        
+        .stat-val { display: block; font-size: 1.8rem; font-weight: 900; color: var(--primary); }
+        .best-val { font-size: 0.7rem; color: var(--gold); margin-top: 5px; display: block; }
+        
+        .track-container { width: 85%; height: 6px; border-radius: 3px; position: relative; margin: 10px 0; overflow: hidden; }
+        body:not(.light-theme) .track-container { background: #2a2a2a; }
+        body.light-theme .track-container { background: #ddd; }
+        
+        #cursor { width: 8px; height: 100%; background: var(--primary); position: absolute; left: 0; border-radius: 3px; transition: left 0.02s linear; }
+        
+        #drum-pad {
+            width: 240px;
+            height: 240px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, #4a4a4a, #111);
+            border: 8px solid #2a2a2a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px auto;
+            cursor: pointer;
+            transition: transform 0.04s, border-color 0.1s;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+        }
+        body.light-theme #drum-pad {
+            background: radial-gradient(circle at 35% 35%, #ccc, #999);
+            border: 8px solid #ddd;
+        }
+        #drum-pad.active { transform: scale(0.94); border-color: var(--primary); box-shadow: 0 0 30px var(--primary); }
+        #drum-pad b { font-size: 1.5rem; color: white; text-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+        
+        .controls { width: 100%; max-width: 400px; padding: 20px; }
+        .control-group { margin-bottom: 15px; }
+        .control-group label { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem; }
+        body:not(.light-theme) .control-group label { color: #888; }
+        body.light-theme .control-group label { color: #666; }
+        
+        input[type="range"] { width: 100%; height: 4px; -webkit-appearance: none; border-radius: 2px; outline: none; }
+        body:not(.light-theme) input[type="range"] { background: #2a2a2a; }
+        body.light-theme input[type="range"] { background: #ddd; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; background: var(--primary); border-radius: 50%; cursor: pointer; }
+        
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #2a2a2a;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+        body:not(.light-theme) select { background: #1e1e1e; color: #e0e0e0; border-color: #2a2a2a; }
+        body.light-theme select { background: #fff; color: #000; border-color: #ddd; }
+        
+        .btn-main {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 40px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: transform 0.05s, background 0.2s;
+        }
+        .btn-main:active { transform: scale(0.97); }
+        .btn-main.stop { background: var(--error); }
+        
+        .msg { height: 30px; font-size: 1rem; font-weight: bold; text-align: center; margin: 10px 0; }
+        .perfect { color: var(--gold); text-shadow: 0 0 5px var(--gold); }
+        .good { color: #2ecc71; }
+        .hit { color: #3498db; }
+        .miss { color: var(--error); }
+    </style>
+</head>
+<body>
+<div class="screen">
+    <div class="logo-bar" id="logo" style="display: none;">
+        <div class="logo-icon"></div>
+        <span class="logo-text">Анти ИИ Метроном</span>
+    </div>
+
+    <!-- СТРАНИЦА 1: ЗАСТАВКА -->
+    <div id="p1" class="page active">
+        <div class="layers">
+            <img id="photo" src="frame.jpg" style="z-index:2">
+            <video id="video" src="cube.mp4" muted playsinline preload="auto" style="z-index:1"></video>
+        </div>
+        <button id="soundBtn" class="sound-btn"><span class="ico">🔇</span><span class="txt">Вкл звук</span></button>
+    </div>
+
+    <!-- СТРАНИЦА 2: ПРОЕКТЫ + ПОДДЕРЖКА -->
+    <div id="p2" class="page">
+        <button class="back-btn" onclick="goToPage('p1')">←</button>
+        <div class="proj-list">
+            <div class="support-block">
+                <h3>🤝 ПОДДЕРЖАТЬ ПРОЕКТ</h3>
+                <div class="free-badge">💙 Приложение бесплатное. Было и останется.</div>
+                <div class="support-text">Если проект помог вам или вашим близким — можете поддержать разработку добровольным переводом.</div>
+                <div class="phone-row">
+                    <span>📱 8-920-227-56-76</span>
+                    <button class="copy-phone-btn" onclick="copyPhoneNumber()">📋 Копировать</button>
+                </div>
+                <div class="support-note">✅ Деньги придут мгновенно. Без комиссии. Безопасно.</div>
+                <div class="support-thanks">❤️ Спасибо за поддержку!</div>
+            </div>
+            <div class="other-projects-title">🌟 ДРУГИЕ НАШИ ПРОЕКТЫ</div>
+            <div class="proj-item" onclick="openLink('https://anti-ai-shield.vercel.app/')">🛡️ Анти-ИИ Щит</div>
+            <div class="proj-item" onclick="openLink('https://anti-bullying-app-one.vercel.app/')">🏫 Защита от буллинга</div>
+            <div class="proj-item" onclick="openLink('https://anti-ai-animals.vercel.app/')">🐾 Животные поют</div>
+            <div class="proj-item" onclick="openLink('https://anti-ai-stress.vercel.app/')">🧘 Анти-ИИ Стресс</div>
+            <div class="proj-item" onclick="openLink('https://anti-ai-cosmos.vercel.app/')">✨ Анти ИИ Космос</div>
+            <div class="proj-item" onclick="openLink('https://anti-ai-auto.vercel.app/')">🚗 Анти ИИ Автомобиль</div>
+            <div class="proj-item" onclick="openLink('https://anti-ai-level.vercel.app/')">📐 Анти ИИ Уровень</div>
+            <div class="proj-item" onclick="openLink('https://anti-ai-barcode.vercel.app/')">📱 Анти ИИ Штрих-код</div>
+            <div class="proj-item" onclick="openLink('https://anti-ai-passwords.vercel.app/')">🔐 Анти ИИ Пароли</div>
+            <div class="proj-item" onclick="openLink('https://anti-ai-memory.vercel.app/')">🧠 Анти ИИ Память</div>
+            <div class="proj-item" onclick="openLink('https://rutube.ru/channel/24404224/')">✨ ВолшебствО</div>
+            <button class="btn-metronom" onclick="goToPage('p3')">🎵 ОТКРЫТЬ МЕТРОНОМ</button>
+        </div>
+    </div>
+
+    <!-- СТРАНИЦА 3: МЕТРОНОМ -->
+    <div id="p3" class="page">
+        <button class="back-btn" onclick="goToPage('p2')">←</button>
+        <div id="app" class="app">
+            <div class="header">
+                <span class="header-title" id="title">🥁 Анти ИИ Барабан</span>
+                <div style="display: flex; gap: 8px;">
+                    <span id="theme-switch" class="theme-switch">🌓 Тема</span>
+                    <span id="lang-switch" class="lang-switch">🌐 RU/EN</span>
+                </div>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label" id="lbl-acc">Точность</div>
+                    <span id="accuracy" class="stat-val">0%</span>
+                    <span class="best-val">🏆 <span id="best-label">Рекорд:</span> <span id="best-acc">0%</span></span>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label" id="lbl-hits">Удары</div>
+                    <span id="hits" class="stat-val">0</span>
+                </div>
+            </div>
+            <div class="track-container"><div id="cursor"></div></div>
+            <div id="drum-pad"><b id="lbl-tap">ТАП</b></div>
+            <div id="msg" class="msg"></div>
+            <div class="controls">
+                <div class="control-group">
+                    <label>🎵 BPM: <b id="bpm-val">120</b></label>
+                    <input type="range" id="bpm" min="40" max="200" value="120" step="1">
+                </div>
+                <div class="control-group">
+                    <select id="sound-style">
+                        <option value="kick">🥁 Kick Drum</option>
+                        <option value="snare">🎵 Snare</option>
+                        <option value="hihat">🔔 Hi-Hat</option>
+                        <option value="cowbell">🛎️ Cowbell</option>
+                        <option value="wood">🪵 Woodblock</option>
+                        <option value="laser">⚡ Laser</option>
+                    </select>
+                </div>
+                <button id="start-btn" class="btn-main">🎮 СТАРТ</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ==================== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ====================
+    let audioCtx = null;
+    let bpm = 120;
+    let isRunning = false;
+    let nextNoteTime = 0;
+    let timerID = null;
+    let lastTickTime = 0;
+    let totalHits = 0;
+    let scoreSum = 0;
+    
+    // ==================== ПЕРЕВОДЫ ====================
+    const translations = {
+        ru: {
+            title: "🥁 Анти ИИ Барабан",
+            accuracy: "Точность",
+            hits: "Удары",
+            best: "Рекорд:",
+            tap: "ТАП",
+            start: "🎮 СТАРТ",
+            stop: "⏹️ СТОП",
+            perfect: "🎯 ИДЕАЛЬНО!",
+            good: "👍 ХОРОШО",
+            hit: "⚡ ПОПАЛ",
+            miss: "😅 МИМО"
+        },
+        en: {
+            title: "🥁 Anti-AI Drum",
+            accuracy: "Accuracy",
+            hits: "Hits",
+            best: "Best:",
+            tap: "TAP",
+            start: "🎮 START",
+            stop: "⏹️ STOP",
+            perfect: "🎯 PERFECT!",
+            good: "👍 GOOD",
+            hit: "⚡ HIT",
+            miss: "😅 MISS"
+        }
+    };
+    
+    let currentLang = 'ru';
+    
+    // Функция ОСТАНОВКИ метронома (останавливает всё)
+    function stopMetronome() {
+        if (isRunning) {
+            isRunning = false;
+            if (timerID) {
+                clearTimeout(timerID);
+                timerID = null;
+            }
+            const startBtn = document.getElementById('start-btn');
+            if (startBtn) {
+                const t = translations[currentLang];
+                startBtn.innerText = t.start;
+                startBtn.classList.remove('stop');
+            }
+        }
+    }
+    
+    // Функция обновления текста
+    function updateLanguage() {
+        const t = translations[currentLang];
+        document.getElementById('title').innerText = t.title;
+        document.getElementById('lbl-acc').innerText = t.accuracy;
+        document.getElementById('lbl-hits').innerText = t.hits;
+        document.getElementById('best-label').innerText = t.best;
+        document.getElementById('lbl-tap').innerText = t.tap;
+        const startBtn = document.getElementById('start-btn');
+        if (startBtn) {
+            startBtn.innerText = isRunning ? t.stop : t.start;
+        }
+    }
+    
+    function toggleLanguage() {
+        currentLang = currentLang === 'ru' ? 'en' : 'ru';
+        updateLanguage();
+    }
+    
+    // ==================== ПЕРЕКЛЮЧЕНИЕ ТЕМЫ ====================
+    function toggleTheme() {
+        document.body.classList.toggle('light-theme');
+        const isLight = document.body.classList.contains('light-theme');
+        localStorage.setItem('theme', isLight ? 'light' : 'dark');
+    }
+    
+    function loadTheme() {
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'light') {
+            document.body.classList.add('light-theme');
+        } else {
+            document.body.classList.remove('light-theme');
+        }
+    }
+    
+    // ==================== НАВИГАЦИЯ (С ОСТАНОВКОЙ МЕТРОНОМА) ====================
+    function goToPage(id) {
+        // ОСТАНАВЛИВАЕМ МЕТРОНОМ ПРИ УХОДЕ СО СТРАНИЦЫ 3
+        if (id !== 'p3') {
+            stopMetronome();
+        }
+        
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        const logo = document.getElementById('logo');
+        if (id === 'p1') logo.style.display = 'none';
+        else logo.style.display = 'flex';
+        
+        if (id === 'p3') {
+            setTimeout(() => {
+                const appDiv = document.getElementById('app');
+                if (appDiv) appDiv.classList.add('visible');
+            }, 100);
+        } else {
+            const appDiv = document.getElementById('app');
+            if (appDiv) appDiv.classList.remove('visible');
+        }
+    }
+
+    function openLink(url) {
+        window.open(url, '_blank');
+    }
+
+    function copyPhoneNumber() {
+        const phone = "8-920-227-56-76";
+        navigator.clipboard.writeText(phone).then(() => {
+            const btn = event.target;
+            const originalText = btn.innerText;
+            btn.innerText = "✅ Скопировано!";
+            setTimeout(() => btn.innerText = originalText, 1500);
+        });
+    }
+
+    // ==================== СТРАНИЦА 1: ЗАСТАВКА ====================
+    (function initSplash() {
+        const photo = document.getElementById('photo');
+        const video = document.getElementById('video');
+        const btn = document.getElementById('soundBtn');
+        const ico = btn.querySelector('.ico');
+        const txt = btn.querySelector('.txt');
+        let soundOn = false;
+        let videoStarted = false;
+        
+        video.muted = true;
+        
+        function updateBtn() {
+            if (soundOn) {
+                ico.innerText = '🔊';
+                txt.innerText = 'Звук вкл';
+            } else {
+                ico.innerText = '🔇';
+                txt.innerText = 'Вкл звук';
+            }
+        }
+        
+        btn.onclick = () => {
+            if (soundOn) {
+                video.muted = true;
+                soundOn = false;
+            } else {
+                video.muted = false;
+                soundOn = true;
+                if (videoStarted && video.paused) video.play().catch(e => console.log);
+            }
+            updateBtn();
+        };
+        
+        function switchToVideoAndNext() {
+            if (videoStarted) return;
+            videoStarted = true;
+            video.style.zIndex = '2';
+            photo.style.zIndex = '1';
+            video.play().catch(e => console.log);
+            setTimeout(() => {
+                if (video && !video.ended) video.pause();
+                goToPage('p2');
+            }, 3000);
+        }
+        
+        if (photo.complete && photo.naturalWidth) {
+            setTimeout(switchToVideoAndNext, 2000);
+        } else {
+            photo.onload = () => setTimeout(switchToVideoAndNext, 2000);
+            setTimeout(() => { if (!videoStarted) switchToVideoAndNext(); }, 2500);
+        }
+        updateBtn();
+    })();
+
+    // ==================== СТРАНИЦА 3: МЕТРОНОМ ====================
+    function initAudio() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        return audioCtx;
+    }
+    
+    function playSynth(freq, type, decay, vol = 0.7) {
+        if (!audioCtx) return;
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, now);
+        gain.gain.setValueAtTime(vol, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + decay);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(now + decay);
+    }
+    
+    const sounds = {
+        kick: () => playSynth(150, 'sine', 0.4, 0.8),
+        snare: () => playSynth(250, 'triangle', 0.15, 0.7),
+        hihat: () => playSynth(8000, 'sine', 0.05, 0.2),
+        cowbell: () => playSynth(800, 'square', 0.15, 0.3),
+        wood: () => playSynth(1200, 'sine', 0.05, 0.5),
+        laser: () => { playSynth(1000, 'sine', 0.2, 0.4); setTimeout(() => playSynth(600, 'sine', 0.15, 0.3), 50); }
+    };
+    
+    function scheduler() {
+        if (!isRunning) return;
+        while (nextNoteTime < audioCtx.currentTime + 0.1) {
+            lastTickTime = nextNoteTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.frequency.value = 1000;
+            gain.gain.setValueAtTime(0.08, nextNoteTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, nextNoteTime + 0.04);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(nextNoteTime);
+            osc.stop(nextNoteTime + 0.04);
+            nextNoteTime += 60.0 / bpm;
+        }
+        timerID = setTimeout(scheduler, 25);
+    }
+    
+    function updateCursor() {
+        if (!isRunning || !audioCtx) { requestAnimationFrame(updateCursor); return; }
+        const now = audioCtx.currentTime;
+        const cycle = 60 / bpm;
+        const elapsed = (now - lastTickTime) % cycle;
+        const progress = Math.min(1, Math.max(0, elapsed / cycle));
+        const cursor = document.getElementById('cursor');
+        if (cursor) cursor.style.left = (progress * 100) + "%";
+        requestAnimationFrame(updateCursor);
+    }
+    
+    function handleTap() {
+        initAudio();
+        const style = document.getElementById('sound-style').value;
+        if (sounds[style]) sounds[style]();
+        if ("vibrate" in navigator) navigator.vibrate(15);
+        const pad = document.getElementById('drum-pad');
+        pad.classList.add('active');
+        setTimeout(() => pad.classList.remove('active'), 60);
+        if (!isRunning) return;
+        
+        const now = audioCtx.currentTime;
+        const diff = Math.abs(now - lastTickTime) * 1000;
+        let points = 0, msgClass = '', msgText = '';
+        const t = translations[currentLang];
+        
+        if (diff < 30) { points = 100; msgClass = 'perfect'; msgText = t.perfect; }
+        else if (diff < 70) { points = 70; msgClass = 'good'; msgText = t.good; }
+        else if (diff < 150) { points = 40; msgClass = 'hit'; msgText = t.hit; }
+        else { points = 0; msgClass = 'miss'; msgText = t.miss; }
+        
+        totalHits++; scoreSum += points;
+        const currentAccuracy = Math.round(scoreSum / totalHits);
+        document.getElementById('hits').innerText = totalHits;
+        document.getElementById('accuracy').innerText = currentAccuracy + "%";
+        const msgDiv = document.getElementById('msg');
+        msgDiv.innerText = msgText;
+        msgDiv.className = 'msg ' + msgClass;
+        const best = localStorage.getItem('drumBest') || 0;
+        if (currentAccuracy > best) {
+            localStorage.setItem('drumBest', currentAccuracy);
+            document.getElementById('best-acc').innerText = currentAccuracy + "%";
+        }
+    }
+    
+    function startTraining() {
+        initAudio();
+        if (audioCtx.state === 'suspended') audioCtx.resume().then(() => actuallyStart());
+        else actuallyStart();
+    }
+    
+    function actuallyStart() {
+        const t = translations[currentLang];
+        if (isRunning) {
+            // Остановка
+            isRunning = false;
+            if (timerID) {
+                clearTimeout(timerID);
+                timerID = null;
+            }
+            const btn = document.getElementById('start-btn');
+            btn.innerText = t.start;
+            btn.classList.remove('stop');
+            return;
+        }
+        // Запуск
+        isRunning = true;
+        totalHits = 0;
+        scoreSum = 0;
+        document.getElementById('hits').innerText = "0";
+        document.getElementById('accuracy').innerText = "0%";
+        document.getElementById('msg').innerText = "";
+        nextNoteTime = audioCtx.currentTime;
+        lastTickTime = nextNoteTime;
+        scheduler();
+        updateCursor();
+        const btn = document.getElementById('start-btn');
+        btn.innerText = t.stop;
+        btn.classList.add('stop');
+    }
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        loadTheme();
+        
+        const startBtn = document.getElementById('start-btn');
+        const bpmSlider = document.getElementById('bpm');
+        const drumPad = document.getElementById('drum-pad');
+        const langSwitch = document.getElementById('lang-switch');
+        const themeSwitch = document.getElementById('theme-switch');
+        
+        if (startBtn) startBtn.onclick = startTraining;
+        if (bpmSlider) bpmSlider.oninput = function() { bpm = parseInt(this.value); document.getElementById('bpm-val').innerText = bpm; };
+        if (drumPad) drumPad.onpointerdown = (e) => { e.preventDefault(); handleTap(); };
+        if (langSwitch) langSwitch.onclick = toggleLanguage;
+        if (themeSwitch) themeSwitch.onclick = toggleTheme;
+        window.onkeydown = (e) => { if (e.code === 'Space') { e.preventDefault(); handleTap(); } };
+        
+        const savedBest = localStorage.getItem('drumBest');
+        if (savedBest) document.getElementById('best-acc').innerText = savedBest + "%";
+        
+        updateLanguage();
+    });
+    
+    document.body.addEventListener('touchstart', () => {
+        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    }, { once: true });
+    
+    if ('serviceWorker' in navigator) {
+        const swCode = `const CACHE_NAME = 'drum-v3'; self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE_NAME).then(c => c.add(location.href))); }); self.addEventListener('fetch', e => { e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))); });`;
+        const blob = new Blob([swCode], { type: 'text/javascript' });
+        navigator.serviceWorker.register(URL.createObjectURL(blob));
+    }
+</script>
+</body>
+</html>
