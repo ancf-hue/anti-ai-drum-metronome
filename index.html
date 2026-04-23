@@ -54,7 +54,7 @@
             height: 100%;
             display: none;
             background: #000;
-            overflow-y: auto;
+            overflow-y: hidden;
             transition: background 0.3s ease;
         }
 
@@ -124,6 +124,13 @@
         }
         .back-btn:active { transform: scale(0.95); }
 
+        /* === СКРЫТИЕ СКРОЛЛБАРОВ === */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
         /* СТРАНИЦА 1: ЗАСТАВКА */
         .layers {
             position: absolute;
@@ -173,8 +180,11 @@
 
         /* СТРАНИЦА 2: ПРОЕКТЫ + ПОДДЕРЖКА */
         .proj-list {
-            padding: 20px 16px 30px;
+            padding: 20px 16px 80px; /* ← ИЗМЕНЕНО: больше отступ снизу */
             height: 100%;
+            overflow-y: hidden;
+        }
+        .proj-list.no-scrollbar {
             overflow-y: auto;
         }
         
@@ -293,7 +303,7 @@
             font-size: 1rem;
             font-weight: bold;
             cursor: pointer;
-            margin-top: 15px;
+            margin-top: 30px; /* ← ИЗМЕНЕНО: больше отступ сверху */
         }
         .btn-metronom:active { transform: scale(0.97); }
 
@@ -311,7 +321,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            overflow-y: auto;
+            overflow-y: hidden;
             opacity: 0;
             transition: opacity 0.5s ease, background 0.3s ease;
         }
@@ -432,7 +442,11 @@
         #drum-pad.active { transform: scale(0.94); border-color: var(--primary); box-shadow: 0 0 30px var(--primary); }
         #drum-pad b { font-size: 1.5rem; color: white; text-shadow: 0 2px 5px rgba(0,0,0,0.5); }
         
-        .controls { width: 100%; max-width: 400px; padding: 20px; }
+        .controls { 
+            width: 100%; 
+            max-width: 400px; 
+            padding: 20px 20px 60px; /* ← ИЗМЕНЕНО: больше отступ снизу */
+        }
         .control-group { margin-bottom: 15px; }
         .control-group label { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem; }
         body:not(.light-theme) .control-group label { color: #888; }
@@ -464,7 +478,7 @@
             font-size: 1rem;
             font-weight: bold;
             cursor: pointer;
-            margin-top: 15px;
+            margin-top: 25px; /* ← ИЗМЕНЕНО: больше отступ сверху */
             transition: transform 0.05s, background 0.2s;
         }
         .btn-main:active { transform: scale(0.97); }
@@ -496,7 +510,7 @@
     <!-- СТРАНИЦА 2: ПРОЕКТЫ + ПОДДЕРЖКА -->
     <div id="p2" class="page">
         <button class="back-btn" onclick="goToPage('p1')">←</button>
-        <div class="proj-list">
+        <div class="proj-list no-scrollbar">
             <div class="support-block">
                 <h3>🤝 ПОДДЕРЖАТЬ ПРОЕКТ</h3>
                 <div class="free-badge">💙 Приложение бесплатное. Было и останется.</div>
@@ -527,7 +541,7 @@
     <!-- СТРАНИЦА 3: МЕТРОНОМ -->
     <div id="p3" class="page">
         <button class="back-btn" onclick="goToPage('p2')">←</button>
-        <div id="app" class="app">
+        <div id="app" class="app no-scrollbar">
             <div class="header">
                 <span class="header-title" id="title">🥁 Анти ИИ Барабан</span>
                 <div style="display: flex; gap: 8px;">
@@ -613,7 +627,6 @@
     
     let currentLang = 'ru';
     
-    // Функция ОСТАНОВКИ метронома (останавливает всё)
     function stopMetronome() {
         if (isRunning) {
             isRunning = false;
@@ -630,7 +643,6 @@
         }
     }
     
-    // Функция обновления текста
     function updateLanguage() {
         const t = translations[currentLang];
         document.getElementById('title').innerText = t.title;
@@ -649,7 +661,6 @@
         updateLanguage();
     }
     
-    // ==================== ПЕРЕКЛЮЧЕНИЕ ТЕМЫ ====================
     function toggleTheme() {
         document.body.classList.toggle('light-theme');
         const isLight = document.body.classList.contains('light-theme');
@@ -665,9 +676,7 @@
         }
     }
     
-    // ==================== НАВИГАЦИЯ (С ОСТАНОВКОЙ МЕТРОНОМА) ====================
     function goToPage(id) {
-        // ОСТАНАВЛИВАЕМ МЕТРОНОМ ПРИ УХОДЕ СО СТРАНИЦЫ 3
         if (id !== 'p3') {
             stopMetronome();
         }
@@ -703,7 +712,6 @@
         });
     }
 
-    // ==================== СТРАНИЦА 1: ЗАСТАВКА ====================
     (function initSplash() {
         const photo = document.getElementById('photo');
         const video = document.getElementById('video');
@@ -758,7 +766,6 @@
         updateBtn();
     })();
 
-    // ==================== СТРАНИЦА 3: МЕТРОНОМ ====================
     function initAudio() {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         return audioCtx;
@@ -860,7 +867,6 @@
     function actuallyStart() {
         const t = translations[currentLang];
         if (isRunning) {
-            // Остановка
             isRunning = false;
             if (timerID) {
                 clearTimeout(timerID);
@@ -871,7 +877,6 @@
             btn.classList.remove('stop');
             return;
         }
-        // Запуск
         isRunning = true;
         totalHits = 0;
         scoreSum = 0;
